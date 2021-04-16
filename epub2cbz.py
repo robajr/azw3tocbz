@@ -1,7 +1,6 @@
 import os
 import sys, shutil
 import zipfile
-from zipfile import ZipFile
 import codecs, re
 
 def main(argv):
