@@ -1,5 +1,4 @@
-import os
-import sys, shutil
+import os, sys, shutil
 import zipfile
 import codecs, re
 
@@ -11,10 +10,14 @@ def processZip(zipname):
 
     print("Processing " + zipname + " " + zipname[:-5])
     if (zipname[-4:] == 'azw3'):
+
+        # Use calibre to convert Amazon book to epub
+        # "Tablet" profile prevents image downsizing
         oscmd = 'ebook-convert "'+zipname+'" "'+zipname[:-5]+'.epub" --output-profile tablet'
         print(oscmd)
         os.system(oscmd)
 
+        #remove .azw3 and add .epub file type to variable
         zipname = zipname[:-5]+'.epub'
 
 
@@ -31,10 +34,15 @@ def processZip(zipname):
             reorderImages(tmpDirName)
 
             # Collect fixed images into one zip
+            print("Zipping file")
             directory = tmpDirName+"\\fixed"
             shutil.make_archive(zipname, 'zip', directory)
+
+            print("Renaming to cbz and cleaning up")
             shutil.move(zipname+".zip",zipname[:-5]+".cbz")
             shutil.rmtree(tmpDirName)
+            
+            print("Done")
 
     else:
         print(zipname + " is an invalid Zip or epub file")
