@@ -3,18 +3,20 @@ import zipfile
 import codecs, re
 
 def main(argv):
+    # Command line arguments are just a list of files, .epub or .azw3
     for x in argv[1:]:
         processZip(x)
 
 def processZip(zipname):
 
-    print("Processing " + zipname + " " + zipname[:-5])
+    print("Processing " + zipname[:-5])
     if (zipname[-4:] == 'azw3'):
 
         # Use calibre to convert Amazon book to epub
         # "Tablet" profile prevents image downsizing
         oscmd = 'ebook-convert "'+zipname+'" "'+zipname[:-5]+'.epub" --output-profile tablet'
-        print(oscmd)
+        print("Launching Calibre CLI to convert AZW3: " + oscmd)
+        print("If this fails, please make sure Calibre is in your PATH directory")
         os.system(oscmd)
 
         #remove .azw3 and add .epub file type to variable
@@ -23,7 +25,7 @@ def processZip(zipname):
 
     # read file list
     if zipfile.is_zipfile(zipname):
-        print("Valid file - extracting to temporary directory")
+        print("Valid file type - extracting to temporary directory to rebuild to .cbz structure")
         with zipfile.ZipFile(zipname) as zf:
 
             # Extract epub files
@@ -58,14 +60,19 @@ def reorderImages(dirName):
 
     while True:
         try:
-            file = codecs.open(dirName + "/text/part"+format(i, '04')+".html", 'r', 'utf-8')
+            # This attempts two known format styles, no real backup here, it's one or the other
+            # Will likely crap out if it doesn't follow these two, and I have no error raise functions
+            try:
+                file = codecs.open(dirName + "/text/part"+format(i, '04')+".html", 'r', 'utf-8')
+            except:
+                file = codecs.open(dirName + "/OEBPS/text/p_"+format(i, '04')+".xhtml", 'r', 'utf-8')
+
             line = file.readline()
             while line:
-                    # print(line)
-                    match = re.search(r'(?<=img src="../images/)\S*.[jpg,jpeg,png]',line)
+                    match = re.search(r'.*<img src="..(/images?\S*.[jpg,jpeg,png])',line)                    
                     if match:
-                        #print("Found image - " + match.group(0))
-                        src = dirName+'\\images\\'+match.group(0)
+                        # Moves the matched image to a single directory, ordered by image number
+                        src = dirName+match.group(1)                        
                         dest = dirName+'\\fixed\\'+format(i, '04')+'.jpeg'
                                                
                         shutil.copyfile(src, dest)
@@ -78,7 +85,10 @@ def reorderImages(dirName):
             break
 
     print("Looking for cover image")
-    file = codecs.open(dirName + "/titlepage.xhtml", 'r', 'utf-8')
+    try:
+        file = codecs.open(dirName + "/titlepage.xhtml", 'r', 'utf-8')
+    except:
+        file = codecs.open(dirName + "/OEBPS/text/p_cover.xhtml", 'r', 'utf-8')
     line = file.readline()
     while line:
         
