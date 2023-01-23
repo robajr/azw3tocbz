@@ -4,7 +4,7 @@ This dirty little python script converts azw3 (non-DRM) or epub files to cbz
 
 It relies on:
 * Python (base distribution)
-* Calibre
+* Calibre (if converting from azw3)
 
 It goes through a few steps:
 * If the incoming file is azw3, converts to epub using calibre command line arguments (python os call)
